@@ -1,0 +1,50 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" 
+    android:padding="10dp"
+    android:orientation="vertical">
+	
+    <TextView 
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginTop="10dp"
+       android:text="Kuaipan-Android SDK Demo"
+       android:textSize="18sp"
+       android:gravity="center" />
+    <TextView 
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:text="QQ Group:27588046"
+       android:textSize="13sp"
+       android:layout_marginBottom="15dp"
+       android:gravity="right" />
+    
+    <View 
+       android:layout_width="fill_parent"
+       android:layout_height="1px"
+       android:layout_marginBottom="25dp"
+       android:background="@drawable/base_divider" />
+    
+   <Button 
+       android:id="@+id/login_btn"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginBottom="15dp"
+       android:textSize="18sp"
+       android:gravity="center"
+       android:background="@drawable/button_green_s"
+       android:text="Waiting for Login" />
+   
+   <Button 
+       android:id="@+id/create_folder_btn"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginBottom="15dp"
+       android:textSize="18sp"
+       android:gravity="center"
+       android:background="@drawable/button_white_s"
+       android:text="Create 'ccst' Folder" />
+   
+   <!-- wait yours add here-->
+
+</LinearLayout>

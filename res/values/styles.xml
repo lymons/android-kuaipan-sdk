@@ -1,0 +1,10 @@
+<resources>
+
+    <style name="AppTheme" parent="android:Theme.Light" >
+   		<!-- 无标题 -->
+   		<item name="android:windowNoTitle">true</item> 
+   		<!-- 不采用系统阴影 -->
+   		<item name="android:windowContentOverlay">@null</item> 
+	</style>
+
+</resources>
