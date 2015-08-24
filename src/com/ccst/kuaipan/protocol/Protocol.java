@@ -18,11 +18,13 @@ import com.ccst.kuaipan.protocol.util.RequestEngine.HttpRequestCallback;
 import com.ccst.kuaipan.protocol.util.TaskPool.TaskInterface;
 
 public class Protocol {
-    public final static String CONSUMER_KEY = "xcQuYfp06fCWyhY4";
-    public final static String CONSUMER_SECRET = "SlpIk6suKKyqax5x";
+    public final static String CONSUMER_KEY = "xcaJo32lEB9tW2LQ";
+    public final static String CONSUMER_SECRET = "Q3wdWhi3LtevXtls";
     
     public static final String APP_ROOT="app_folder";
     public final static String API_HOST = "openapi.kuaipan.cn";
+    
+    public static String customApiHostString;
     
     public static class ProtocolType {
         //login
@@ -32,6 +34,16 @@ public class Protocol {
         //create folder
         public static final int CREATE_FOLDER_PROTOCOL = 200;
         
+        //upload file
+        public static final int UPLOAD_FILE_PROTOCOL = 300;
+        
+    }
+    
+    public static String getApiHost(int type) {
+        if (type == ProtocolType.UPLOAD_FILE_PROTOCOL) {
+            return customApiHostString;
+        }
+        return API_HOST;
     }
     
     public static String getHttpSuffix(int type){
@@ -45,6 +57,9 @@ public class Protocol {
             break;
         case ProtocolType.CREATE_FOLDER_PROTOCOL:
             uri = "/1/fileops/create_folder/";
+            break;
+        case ProtocolType.UPLOAD_FILE_PROTOCOL:
+            uri = "/1/fileops/upload_file/";
             break;
         default:
             break;
@@ -72,7 +87,7 @@ public class Protocol {
         String s = "GET";
         switch (type) {
         //TODO:modify for specific code
-        case 0:
+        case ProtocolType.UPLOAD_FILE_PROTOCOL:
             s = "POST";
             break;
 
@@ -84,7 +99,7 @@ public class Protocol {
     }
     
     public static void setRequestUrl(HttpRequestInfo info){
-        String url = getHttpOrHttps(info.getType()) + API_HOST + getHttpSuffix(info.getType());
+        String url = getHttpOrHttps(info.getType()) + Protocol.getApiHost(info.getType()) + getHttpSuffix(info.getType());
         info.getKuaipanURL().setUrl(url);
     }
     
@@ -107,7 +122,8 @@ public class Protocol {
         String signature = "";
         try {
             signature = OauthUtility.generateSignature(getPostOrGet(type), 
-                API_HOST, location, signed_params, consumer, token, getHttpOrHttps(type).equals("https://"));
+                    Protocol.getApiHost(info.getType()), location, signed_params, consumer, 
+                    token, getHttpOrHttps(type).equals("https://"));
         } catch (NoSuchAlgorithmException e) {
         } catch (InvalidKeyException e) {
         }
@@ -124,10 +140,27 @@ public class Protocol {
     }
     
     public abstract static class BaseProtocolData implements TaskInterface {
+        protected String mPath;
+        public String getmPath() {
+            return mPath;
+        }
+
+        public void setmPath(String mPath) {
+            this.mPath = mPath;
+        }
+
         protected int mProtocolType;
         protected TreeMap<String, String> mUserParams;
 
         protected Context mContext;
+
+        public Context getmContext() {
+            return mContext;
+        }
+
+        public void setmContext(Context mContext) {
+            this.mContext = mContext;
+        }
 
         protected HttpRequestCallback mRequestCallback = null;
         protected HttpRequestInfo mRequestInfo = null;
@@ -140,6 +173,8 @@ public class Protocol {
             mProtocolType = protocolType;
             mRequestCallback = callBack;
             mUserParams = new TreeMap<String,String>();
+            
+            Protocol.customApiHostString = null;
         }
         
         public TreeMap<String, String> getUserParams() {

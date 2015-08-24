@@ -1,21 +1,27 @@
 package com.ccst.kuaipan.protocol.util;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.Map;
 import java.util.TreeMap;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.text.format.Time;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.ccst.kuaipan.database.Settings;
 import com.ccst.kuaipan.database.Settings.Field;
-import com.ccst.kuaipan.protocol.CreateDataProtocol.CreateFolderProtocol;
+import com.ccst.kuaipan.protocol.CreateDataProtocol.*;
 import com.ccst.kuaipan.protocol.LoginProtocol;
 import com.ccst.kuaipan.protocol.Protocol;
 import com.ccst.kuaipan.protocol.Protocol.BaseProtocolData;
 import com.ccst.kuaipan.protocol.Protocol.ProtocolType;
 import com.ccst.kuaipan.protocol.data.HttpRequestInfo;
 import com.ccst.kuaipan.protocol.data.KuaipanHTTPResponse;
+import com.ccst.kuaipan.protocol.data.HttpRequestInfo.KuaipanURL;
 import com.ccst.kuaipan.protocol.session.OauthSession;
 import com.ccst.kuaipan.protocol.session.Session;
 import com.ccst.kuaipan.tool.LogHelper;
@@ -77,12 +83,13 @@ public class RequestEngine {
     
     private void createHttpRequestInfo(BaseProtocolData d) {
         int type = d.getProtocolType();
+        HttpRequestInfo info = d.getHttpRequestInfo();
         TreeMap<String, String> userParams = d.getUserParams();
-        HttpRequestInfo info = new HttpRequestInfo(type, userParams);
+        info = new HttpRequestInfo(type, userParams);
         Protocol.setRequestUrl(info);
-        Protocol.setRequestQuery(mSession.consumer, mSession.token, info);
-
         d.setHttpRequestInfo(info);
+        Protocol.setRequestQuery(mSession.consumer, mSession.token, info);
+        
         callbackStart(d);
     }
     
@@ -112,13 +119,56 @@ public class RequestEngine {
     
     public class HttpRequestTask extends AsyncTask<BaseProtocolData, Void, BaseProtocolData> {
         @Override
-        protected BaseProtocolData doInBackground(BaseProtocolData... data) {
+        protected BaseProtocolData doInBackground(final BaseProtocolData... data) {
             KuaipanHTTPResponse resp = new KuaipanHTTPResponse();
             try {
+                KuaipanURL url = data[0].getHttpRequestInfo().getKuaipanURL();
                 LogHelper.log("################################");
-                LogHelper.log("Request url"+data[0].getHttpRequestInfo().getKuaipanURL());
+                LogHelper.log("Request url"+ url);
                 //TODO:add POST status, now just for GET
-                resp = KuaipanHTTPUtility.requestByGET(data[0].getHttpRequestInfo().getKuaipanURL());
+                if (data[0].getType() == ProtocolType.UPLOAD_FILE_PROTOCOL) {
+                    File file = new File(data[0].getmPath());
+                    FileInputStream  fis = new FileInputStream(file);
+                    resp = KuaipanHTTPUtility.doUpload(url, fis, file.length(), new ProgressListener() {
+                        
+                        @Override
+                        public void started() {
+                            // TODO Auto-generated method stub
+                            
+                        }
+                        
+                        @Override
+                        public void processing(long bytes, long total) {
+                            // TODO Auto-generated method stub
+                            Log.w("File Up", "Completed: " + bytes*100/total + "%");
+                        }
+                        
+                        @Override
+                        public int getUpdateInterval() {
+                            // TODO Auto-generated method stub
+                            return 0;
+                        }
+                        
+                        @Override
+                        public void completed() {
+                            // TODO Auto-generated method stub
+                            final Activity act = (Activity) data[0].getmContext();
+                            act.runOnUiThread(new Runnable() {
+                                
+                                @Override
+                                public void run() {
+                                    // TODO Auto-generated method stub
+                                    Toast.makeText(act, "Upload Done.", Toast.LENGTH_LONG).show();
+                                    Log.w("File Up", "All Completed.");
+                                }
+                            });
+                        }
+                    });
+                    fis.close();
+                } else {
+                    resp = KuaipanHTTPUtility.requestByGET(url);
+                }
+                
                 Map<String, Object> result = OauthUtility.parseResponseToMap(resp);
                 data[0].getHttpRequestInfo().setResultParams(result);
             }catch (Exception KuaipanIOException) {
@@ -154,6 +204,35 @@ public class RequestEngine {
     
     public void createFolder(String path, HttpRequestCallback callback){
         send(new CreateFolderProtocol(mContext, path, ProtocolType.CREATE_FOLDER_PROTOCOL, callback));
+    }
+    
+    public void uploadFile(final String path, final HttpRequestCallback callback){
+        new AsyncTask<Void, Void, String>() {
+            @Override
+            protected String doInBackground(Void... params) {
+                Map<String, Object> result = null;
+                KuaipanHTTPResponse resp = new KuaipanHTTPResponse();
+                KuaipanURL locateUrl = new KuaipanURL("http://api-content.dfs.kuaipan.cn/1/fileops/upload_locate");
+                try {
+                    LogHelper.log("################################");
+                    LogHelper.log("Request url"+ locateUrl);
+                    //TODO:add POST status, now just for GET
+                    resp = KuaipanHTTPUtility.requestByGET(locateUrl);
+                    result = OauthUtility.parseResponseToMap(resp);
+                }catch (Exception KuaipanIOException) {
+                    resp.code = KuaipanHTTPResponse.KUAIPAN_UNKNOWNED_ERROR;
+                }
+                
+                return (String) result.get("url");
+            }
+
+            @Override
+            protected void onPostExecute(String data) {
+                if(data != null){
+                    send(new UploadFileProtocol(mContext, data, path, ProtocolType.UPLOAD_FILE_PROTOCOL, callback));
+                }
+            }
+        }.execute();
     }
 
 }

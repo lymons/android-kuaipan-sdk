@@ -45,6 +45,16 @@
        android:background="@drawable/button_white_s"
        android:text="Create 'ccst' Folder" />
    
+   <Button 
+       android:id="@+id/upload_file_btn"
+       android:layout_width="fill_parent"
+       android:layout_height="wrap_content"
+       android:layout_marginBottom="15dp"
+       android:textSize="18sp"
+       android:gravity="center"
+       android:background="@drawable/button_white_s"
+       android:text="Upload Sample File" />
+   
    <!-- wait yours add here-->
 
 </LinearLayout>

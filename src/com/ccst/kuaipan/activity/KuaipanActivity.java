@@ -3,6 +3,7 @@ package com.ccst.kuaipan.activity;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
@@ -23,6 +24,7 @@ public class KuaipanActivity extends Activity implements OnClickListener, HttpRe
     ProgressDialog mProgressDialog;
     TextView mLoginView;
     TextView mCreateFolderView;
+    TextView mUploadView;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -49,9 +51,11 @@ public class KuaipanActivity extends Activity implements OnClickListener, HttpRe
     private void initData(){
         mLoginView = (TextView)findViewById(R.id.login_btn);
         mCreateFolderView = (TextView)findViewById(R.id.create_folder_btn);
+        mUploadView = (TextView)findViewById(R.id.upload_file_btn);
         
         mLoginView.setOnClickListener(this);
         mCreateFolderView.setOnClickListener(this);
+        mUploadView.setOnClickListener(this);
     }
     
     @Override
@@ -78,7 +82,7 @@ public class KuaipanActivity extends Activity implements OnClickListener, HttpRe
             }
         }else{
             Toast.makeText(this, KuaipanHTTPResponse.getHttpErrorCodeDescribtion(data.getHttpRequestInfo().getResultCode()), 
-                Toast.LENGTH_SHORT).show();
+                Toast.LENGTH_LONG).show();
         }
     }
 
@@ -90,6 +94,10 @@ public class KuaipanActivity extends Activity implements OnClickListener, HttpRe
             break;
         case R.id.create_folder_btn:
             RequestEngine.getInstance(this).createFolder("/ccst", this);
+            break;
+        case R.id.upload_file_btn:
+            String path = Environment.getExternalStorageDirectory().getPath() + "/snapshot.jpg";
+            RequestEngine.getInstance(this).uploadFile(path, this);
             break;
         default:
             break;

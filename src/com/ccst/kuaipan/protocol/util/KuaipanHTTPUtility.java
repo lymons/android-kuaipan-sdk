@@ -48,6 +48,9 @@ public class KuaipanHTTPUtility {
 		if (con != null)
 			con.disconnect();
 		
+		LogHelper.log("################################");
+        LogHelper.log("Receive result:"+ resp.toString());
+		
 		return resp;
 	}
 	
